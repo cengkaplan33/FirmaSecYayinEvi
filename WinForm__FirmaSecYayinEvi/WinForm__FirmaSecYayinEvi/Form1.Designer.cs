@@ -30,16 +30,18 @@
         {
             this.webBrowser1 = new System.Windows.Forms.WebBrowser();
             this.textBox1 = new System.Windows.Forms.TextBox();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // webBrowser1
             // 
-            this.webBrowser1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.webBrowser1.Location = new System.Drawing.Point(0, 0);
+            this.webBrowser1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.webBrowser1.Location = new System.Drawing.Point(0, 357);
             this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
-            this.webBrowser1.Size = new System.Drawing.Size(776, 446);
+            this.webBrowser1.Size = new System.Drawing.Size(776, 89);
             this.webBrowser1.TabIndex = 0;
+            this.webBrowser1.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.webBrowser1_DocumentCompleted);
             // 
             // textBox1
             // 
@@ -49,12 +51,23 @@
             this.textBox1.Size = new System.Drawing.Size(776, 20);
             this.textBox1.TabIndex = 1;
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
+            // 
+            // richTextBox1
+            // 
+            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.richTextBox1.Location = new System.Drawing.Point(0, 20);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.Size = new System.Drawing.Size(776, 337);
+            this.richTextBox1.TabIndex = 2;
+            this.richTextBox1.Text = "";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(776, 446);
+            this.Controls.Add(this.richTextBox1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.webBrowser1);
             this.Name = "Form1";
@@ -68,6 +81,7 @@
 
         private System.Windows.Forms.WebBrowser webBrowser1;
         private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.RichTextBox richTextBox1;
     }
 }
 
