@@ -21,8 +21,9 @@ namespace WinForm__FirmaSecYayinEvi
             public String EmailAddress;
         }
 
-        public int[] intervals = new int[5] { 15000, 12000, 8000, 10000, 13000 };
+        public int[] intervals = new int[5] { 18000, 13000, 18000, 16000, 13000 };
         public List<FirmModel> firms = new List<FirmModel>();
+        public List<FirmModel> myFirms = new List<FirmModel>();
 
         int page = 1;
         int firmCount = 1;
@@ -55,8 +56,8 @@ namespace WinForm__FirmaSecYayinEvi
 
         public void NavigateListPage()
         {
-                webBrowser1.Navigate(textBox1.Text);
-                webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
+            webBrowser1.Navigate(textBox1.Text);
+            webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
 
         }
 
@@ -71,26 +72,36 @@ namespace WinForm__FirmaSecYayinEvi
 
         private void DetailPageOpened(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-             var spans = webBrowser1.Document.GetElementsByTagName("span");
+            var pList = GetElementByClassName(webBrowser1, "p", "item-details-left-p2");
+            foreach (HtmlElement p in pList)
+            {
+                var sList = GetElementByClassName(p, "span", "marev");
+                if (sList.Count > 0)
+                {
+                    firms[firmCount].EmailAddress = StringHelper.ReverseString(sList[0].InnerText.Trim());
+                    myFirms.Add(firms[firmCount]);
+                }
+            }
+            //var spans = webBrowser1.Document.GetElementsByTagName("p");
 
-             foreach (HtmlElement span in spans)
-             {
-                 if (span.GetAttribute("className").Contains("marev"))
-                 {
-                     firms[firmCount].EmailAddress = span.InnerText;
-                 }
-             }
+            //foreach (HtmlElement span in spans)
+            //{
+            //    if (span.GetAttribute("className").Contains("marev"))
+            //    {
+            //        firms[firmCount].EmailAddress = span.InnerText;
+            //    }
+            //}
 
-             if ((firmCount) == 0)
-             {
-                 richTextBox1.Text = JsonConvert.SerializeObject(firms);
+            if ((firmCount) == 0)
+            {
+                richTextBox1.Text = JsonConvert.SerializeObject(myFirms);
 
-             }
-             else
-             {
+            }
+            else
+            {
 
-                 NavigateDetailPage();
-             }
+                NavigateDetailPage();
+            }
 
 
             webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(DetailPageOpened);
@@ -164,7 +175,7 @@ namespace WinForm__FirmaSecYayinEvi
             //webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(GirisCompleted);
             //webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(b_DocumentCompleted2);
 
-            
+
 
             webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
 
@@ -196,6 +207,51 @@ namespace WinForm__FirmaSecYayinEvi
 
         }
 
+
+        private List< HtmlElement> GetElementByClassName(WebBrowser browser, string tagName, string className)
+        {
+            List<HtmlElement> list = new List<HtmlElement>();
+            var tagElements = browser.Document.GetElementsByTagName(tagName);
+            foreach (HtmlElement tagElement in tagElements)
+            {
+                if (tagElement.GetAttribute("className").Contains(className))
+                {
+                    list.Add(tagElement);
+                }
+            }
+            
+            return list;
+        }
+
+
+        private List<HtmlElement> GetElementByClassName(HtmlElement element,string tagName, string className)
+        {
+            List<HtmlElement> list = new List<HtmlElement>();
+            var tagElements = element.GetElementsByTagName(tagName);
+
+            foreach (HtmlElement tagElement in tagElements)
+            {
+                if (tagElement.GetAttribute("className").Contains(className))
+                {
+                    list.Add(tagElement);
+                }
+            }
+
+            return list;
+        }
+
+        static class StringHelper
+        {
+            /// <summary>
+            /// Receives string and returns the string with its letters reversed.
+            /// </summary>
+            public static string ReverseString(string s)
+            {
+                char[] arr = s.ToCharArray();
+                Array.Reverse(arr);
+                return new string(arr);
+            }
+        }
     }
 }
 
