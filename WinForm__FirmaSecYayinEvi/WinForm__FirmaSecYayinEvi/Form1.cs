@@ -21,11 +21,12 @@ namespace WinForm__FirmaSecYayinEvi
             public String EmailAddress;
         }
 
-        public int[] intervals = new int[5] { 18000, 13000, 18000, 16000, 13000 };
+        public int[] intervals = new int[5] { 58000, 53000, 42000, 46000, 55000 };
         public List<FirmModel> firms = new List<FirmModel>();
         public List<FirmModel> myFirms = new List<FirmModel>();
 
-        int page = 1;
+        int startPage = 1;
+        int endPage = 5;
         int firmCount = 1;
 
         public Form1()
@@ -43,8 +44,14 @@ namespace WinForm__FirmaSecYayinEvi
         {
             if (e.KeyCode == Keys.Enter)
             {
+                firms = new List<FirmModel>();
+                myFirms = new List<FirmModel>();
+
+                startPage = Int32.Parse(txtStartPage.Text);
+                endPage = Int32.Parse(txtEndPage.Text);
+
                 if (textBox1.Text.Length == 0)
-                    textBox1.Text = "http://www.firmasec.com/firma/ara/yay%C4%B1nevi/istanbul/" + page;
+                    textBox1.Text = "http://www.firmasec.com/firma/ara/yay%C4%B1nevi/istanbul/" + startPage;
 
                 webBrowser1.Navigate(textBox1.Text);
 
@@ -56,18 +63,35 @@ namespace WinForm__FirmaSecYayinEvi
 
         public void NavigateListPage()
         {
-            webBrowser1.Navigate(textBox1.Text);
-            webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
-
+            if ((startPage+1) <= endPage)
+            {
+                textBox1.Text = textBox1.Text.Replace("/" + startPage, "/" + (++startPage));
+                System.Threading.Thread.Sleep(intervals[(firmCount + startPage) % 5]);
+                webBrowser1.Navigate(textBox1.Text);
+                webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
+            }
+            else
+            {
+                firmCount = firms.Count;
+                NavigateDetailPage();
+            }
         }
 
         public void NavigateDetailPage()
         {
-            System.Threading.Thread.Sleep(intervals[firmCount % 5]);
-            firmCount--;
-            textBox1.Text = firms[firmCount].URL;
-            webBrowser1.Navigate(firms[firmCount].URL);
-            webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(DetailPageOpened);
+            try
+            {
+                System.Threading.Thread.Sleep(intervals[firmCount % 5]);
+                textBox1.Text = firms[firmCount - 1].URL;
+                webBrowser1.Navigate(textBox1.Text);
+                webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(DetailPageOpened);
+            }
+            catch (Exception)
+            {
+                richTextBox1.Text += textBox1.Text;
+                richTextBox1.Text = JsonConvert.SerializeObject(myFirms);
+                webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(DetailPageOpened);
+            }
         }
 
         private void DetailPageOpened(object sender, WebBrowserDocumentCompletedEventArgs e)
@@ -92,10 +116,10 @@ namespace WinForm__FirmaSecYayinEvi
             //    }
             //}
 
-            if ((firmCount) == 0)
+            if ((firmCount--) == 0)
             {
+                richTextBox1.Text += textBox1.Text;
                 richTextBox1.Text = JsonConvert.SerializeObject(myFirms);
-
             }
             else
             {
@@ -103,17 +127,17 @@ namespace WinForm__FirmaSecYayinEvi
                 NavigateDetailPage();
             }
 
-
             webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(DetailPageOpened);
-
         }
 
         private void ListPageOpened(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
 
             var divs = webBrowser1.Document.GetElementsByTagName("div");
-            HtmlElement paginationDiv = null;
-            bool isKeepGoing = true; ;
+            bool isKeepGoing = false;
+
+            //HtmlElement paginationDiv = null;
+
 
             foreach (HtmlElement div in divs)
             {
@@ -129,8 +153,8 @@ namespace WinForm__FirmaSecYayinEvi
 
                     try
                     {
+                        isKeepGoing = true;
                         firms.Add(new FirmModel() { Name = div.GetElementsByTagName("A")[0].GetAttribute("title"), URL = div.GetElementsByTagName("A")[0].GetAttribute("href") });
-
                     }
                     catch (Exception)
                     {
@@ -179,11 +203,8 @@ namespace WinForm__FirmaSecYayinEvi
 
             webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
 
-            isKeepGoing = false;
             if (isKeepGoing)
             {
-                System.Threading.Thread.Sleep(intervals[firmCount % 5]);
-                textBox1.Text = textBox1.Text.Replace("/" + page, "/" + (++page));
                 NavigateListPage();
             }
             else
@@ -197,9 +218,6 @@ namespace WinForm__FirmaSecYayinEvi
 
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            // Better use the e parameter to get the url.
-            // ... This makes the method more generic and reusable.
-            this.Text = e.Url.ToString() + " loaded";
         }
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
@@ -208,7 +226,7 @@ namespace WinForm__FirmaSecYayinEvi
         }
 
 
-        private List< HtmlElement> GetElementByClassName(WebBrowser browser, string tagName, string className)
+        private List<HtmlElement> GetElementByClassName(WebBrowser browser, string tagName, string className)
         {
             List<HtmlElement> list = new List<HtmlElement>();
             var tagElements = browser.Document.GetElementsByTagName(tagName);
@@ -219,12 +237,12 @@ namespace WinForm__FirmaSecYayinEvi
                     list.Add(tagElement);
                 }
             }
-            
+
             return list;
         }
 
 
-        private List<HtmlElement> GetElementByClassName(HtmlElement element,string tagName, string className)
+        private List<HtmlElement> GetElementByClassName(HtmlElement element, string tagName, string className)
         {
             List<HtmlElement> list = new List<HtmlElement>();
             var tagElements = element.GetElementsByTagName(tagName);
@@ -242,15 +260,22 @@ namespace WinForm__FirmaSecYayinEvi
 
         static class StringHelper
         {
-            /// <summary>
-            /// Receives string and returns the string with its letters reversed.
-            /// </summary>
             public static string ReverseString(string s)
             {
                 char[] arr = s.ToCharArray();
                 Array.Reverse(arr);
                 return new string(arr);
             }
+        }
+
+        private void richTextBox1_TextChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtEndPage_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
@@ -277,7 +302,7 @@ namespace WinForm__FirmaSecYayinEvi
 //        private void Form1_Load(object sender, EventArgs e)
 //        {
 
-        
+
 //        }
 
 //        private void webBrowser1_Navigating(object sender, WebBrowserNavigatingEventArgs e)
@@ -301,7 +326,7 @@ namespace WinForm__FirmaSecYayinEvi
 
 //        private void textBox1_TextChanged(object sender, EventArgs e)
 //        {
-            
+
 //        }
 
 //        private void textBox1_KeyDown(object sender, KeyEventArgs e)
@@ -310,7 +335,7 @@ namespace WinForm__FirmaSecYayinEvi
 //            {
 //                if(textBox1.Text.Length ==0)
 //                    textBox1.Text = "http://www.firmasec.com/firma/ara/yay%C4%B1nevi/istanbul/1";
-                                
+
 //                //webBrowser1.Navigate("http://www.firmasec.com/firma/ara/yay%C4%B1nevi/istanbul/1");
 //                webBrowser1.Navigate(textBox1.Text);
 //            }
