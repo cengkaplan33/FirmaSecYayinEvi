@@ -21,6 +21,7 @@ namespace WinForm__FirmaSecYayinEvi
             public String EmailAddress;
         }
 
+        public int[] intervals = new int[5] { 15000, 12000, 8000, 10000, 13000 };
         public List<FirmModel> firms = new List<FirmModel>();
 
         int page = 1;
@@ -61,7 +62,7 @@ namespace WinForm__FirmaSecYayinEvi
 
         public void NavigateDetailPage()
         {
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(intervals[firmCount % 5]);
             firmCount--;
             textBox1.Text = firms[firmCount].URL;
             webBrowser1.Navigate(firms[firmCount].URL);
@@ -80,13 +81,16 @@ namespace WinForm__FirmaSecYayinEvi
                  }
              }
 
-            if ((firmCount) == 0)
-                richTextBox1.Text = JsonConvert.SerializeObject(firms);
-            else
-            {
+             if ((firmCount) == 0)
+             {
+                 richTextBox1.Text = JsonConvert.SerializeObject(firms);
 
-                NavigateDetailPage();
-            }
+             }
+             else
+             {
+
+                 NavigateDetailPage();
+             }
 
 
             webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(DetailPageOpened);
@@ -164,9 +168,10 @@ namespace WinForm__FirmaSecYayinEvi
 
             webBrowser1.DocumentCompleted -= new WebBrowserDocumentCompletedEventHandler(ListPageOpened);
 
+            isKeepGoing = false;
             if (isKeepGoing)
             {
-                System.Threading.Thread.Sleep(2000);
+                System.Threading.Thread.Sleep(intervals[firmCount % 5]);
                 textBox1.Text = textBox1.Text.Replace("/" + page, "/" + (++page));
                 NavigateListPage();
             }
@@ -184,6 +189,11 @@ namespace WinForm__FirmaSecYayinEvi
             // Better use the e parameter to get the url.
             // ... This makes the method more generic and reusable.
             this.Text = e.Url.ToString() + " loaded";
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+
         }
 
     }
